@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="icon" href="logo.png" type="image/png">
+    <title>Lihat Data Mahasiswa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            overflow-x: hidden;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+
+        #navbar {
+            min-height: 8vh;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+        }
+
+        #bagianKiri {
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #bagianKiri>p {
+            font-size: 20px;
+            user-select: none;
+        }
+
+        #bagianKiri>img {
+            pointer-events: none;
+            user-select: none;
+        }
+
+        #bagianKanan {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+        }
+
+        .aNavbar {
+            font-size: 20px;
+            text-decoration: none;
+            color: black;
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        .aNavbar:hover {
+            color: #2196f3;
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 43px;
+            left: -70px;
+            background-color: white;
+            min-width: 130px;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            border-radius: 5px;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 18px;
+        }
+
+        .dropdown-content a:hover {
+            color: #2196f3;
+        }
+
+        /* Halaman Lihat Data */
+        #lihatData {
+            min-height: 92vh;
+            padding: 30px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f0f0f0 100%);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: linear-gradient(45deg, #2196f3, #21cbf3);
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.3s;
+            color: white;
+        }
+
+        .btn-edit {
+            background-color: #4caf50;
+            width: 70px;
+            margin-bottom: 4px;
+        }
+
+        .btn-edit:hover {
+            background-color: #45a049;
+        }
+
+        .btn-hapus {
+            background-color: #f44336;
+            width: 70px;
+        }
+
+        .btn-hapus:hover {
+            background-color: #da190b;
+        }
+
+        /* Popup form edit & hapus */
+        .overlay {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1000;
+        }
+
+        .overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .popup {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .popup h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            transition: 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #2196f3;
+            box-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
+            outline: none;
+        }
+
+        .popup button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 10px 5px;
+            color: white;
+        }
+
+        .btn-simpan {
+            background: linear-gradient(45deg, #2196f3, #21cbf3);
+        }
+
+        .btn-batal {
+            background-color: gray;
+        }
+
+        /* Popup konfirmasi hapus */
+        .popup-konfirmasi h4 {
+            margin-bottom: 20px;
+        }
+
+        /* Notifikasi */
+        .notif {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #2196f3;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="navbar">
+        <div id="bagianKiri">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Logo Data Mahasiswa" width="30">
+            <p>Data Mahasiswa</p>
+        </div>
+
+        <div id="bagianKanan">
+            <a href="index.html" class="aNavbar">Beranda</a>
+            <div class="dropdown">
+                <a href="#" class="aNavbar">Fitur</a>
+                <div class="dropdown-content">
+                    <a href="tambah.html">Tambah Data</a>
+                    <a href="lihat.html">Lihat Data</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="lihatData">
+        <h2>Data Mahasiswa</h2>
+        <table id="tabelMahasiswa">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama</th>
+                    <th>NIM</th>
+                    <th>Program Studi</th>
+                    <th>Kelas</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Popup edit -->
+    <div class="overlay" id="popupEdit">
+        <div class="popup">
+            <h3>Edit Data Mahasiswa</h3>
+            <div class="input-group">
+                <label>Nama Mahasiswa</label>
+                <input type="text" id="editNama">
+            </div>
+            <div class="input-group">
+                <label>NIM</label>
+                <input type="text" id="editNim">
+            </div>
+            <div class="input-group">
+                <label>Program Studi</label>
+                <input type="text" id="editProdi">
+            </div>
+            <div class="input-group">
+                <label>Kelas</label>
+                <input type="text" id="editKelas">
+            </div>
+            <button class="btn-simpan" id="btnSimpanEdit">Simpan</button>
+            <button class="btn-batal" id="btnBatalEdit">Batal</button>
+        </div>
+    </div>
+
+    <!-- Popup konfirmasi hapus -->
+    <div class="overlay" id="popupHapus">
+        <div class="popup popup-konfirmasi">
+            <h4>⚠️ Yakin ingin menghapus data ini?</h4>
+            <button class="btn-hapus" id="btnYakinHapus">Ya</button>
+            <button class="btn-batal" id="btnBatalHapus">Batal</button>
+        </div>
+    </div>
+
+    <div class="notif" id="notif">✅ Aksi berhasil!</div>
+
+<script>
+    $(document).ready(function () {
+        let indexEdit = null;
+        let indexHapus = null;
+
+        function tampilNotif(teks, warna = '#2196f3') {
+            $('#notif').text(teks).css('background', warna).fadeIn(300).delay(1500).fadeOut(400);
+        }
+
+        function muatData() {
+            let data = JSON.parse(localStorage.getItem('dataMahasiswa')) || [];
+            let tbody = $('#tabelMahasiswa tbody');
+            tbody.empty();
+
+            if (data.length === 0) {
+                tbody.append(`<tr><td colspan="6">Belum ada data mahasiswa.</td></tr>`);
+                return;
+            }
+
+            data.forEach((mhs, i) => {
+                tbody.append(`
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${mhs.nama}</td>
+                        <td>${mhs.nim}</td>
+                        <td>${mhs.prodi}</td>
+                        <td>${mhs.kelas}</td>
+                        <td>
+                            <button class="btn btn-edit" data-index="${i}">Edit</button>
+                            <button class="btn btn-hapus" data-index="${i}">Hapus</button>
+                        </td>
+                    </tr>
+                `);
+            });
+        }
+
+        muatData();
+
+        // ======== VALIDASI INPUTAN SAAT KETIK =========
+        $('#editNama, #editProdi').on('input', function () {
+            this.value = this.value.replace(/[^a-zA-Z\s]/g, ''); // hanya huruf dan spasi
+        });
+
+        $('#editNim').on('input', function () {
+            this.value = this.value.replace(/[^0-9]/g, ''); // hanya angka
+        });
+
+        $('#editKelas').on('input', function () {
+            this.value = this.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 1); // 1 huruf kapital
+        });
+
+        // ======== EDIT DATA =========
+        $(document).on('click', '.btn-edit', function () {
+            indexEdit = $(this).data('index');
+            let data = JSON.parse(localStorage.getItem('dataMahasiswa')) || [];
+            let mhs = data[indexEdit];
+
+            $('#editNama').val(mhs.nama);
+            $('#editNim').val(mhs.nim);
+            $('#editProdi').val(mhs.prodi);
+            $('#editKelas').val(mhs.kelas);
+            $('#popupEdit').addClass('active');
+        });
+
+        $('#btnBatalEdit').click(() => $('#popupEdit').removeClass('active'));
+
+        $('#btnSimpanEdit').click(function () {
+            if (indexEdit === null || indexEdit === undefined) {
+                alert('Tidak ada data yang dipilih untuk diedit.');
+                return;
+            }
+
+            const nama = $('#editNama').val().trim();
+            const nim = $('#editNim').val().trim();
+            const prodi = $('#editProdi').val().trim();
+            const kelas = $('#editKelas').val().trim();
+
+            // ======== Validasi sebelum simpan =========
+            if (nama === "" || nim === "" || prodi === "" || kelas === "") {
+                alert("⚠️ Harap isi semua data sebelum menyimpan!");
+                return;
+            }
+
+            if (!/^[a-zA-Z\s]+$/.test(nama)) {
+                alert("❌ Nama hanya boleh huruf dan spasi!");
+                return;
+            }
+
+            if (!/^[0-9]+$/.test(nim)) {
+                alert("❌ NIM hanya boleh berisi angka!");
+                return;
+            }
+
+            if (!/^[a-zA-Z\s]+$/.test(prodi)) {
+                alert("❌ Program Studi hanya boleh huruf dan spasi!");
+                return;
+            }
+
+            if (!/^[A-Z]$/.test(kelas)) {
+                alert("❌ Kelas hanya boleh 1 huruf kapital (misal: A, B, C)!");
+                return;
+            }
+
+            let data = JSON.parse(localStorage.getItem('dataMahasiswa')) || [];
+            data[indexEdit] = { nama, nim, prodi, kelas };
+            localStorage.setItem('dataMahasiswa', JSON.stringify(data));
+
+            $('#popupEdit').removeClass('active');
+            muatData();
+            tampilNotif('✅ Data berhasil diperbarui!', '#4caf50');
+            indexEdit = null;
+        });
+
+        // ======== HAPUS DATA =========
+        $(document).on('click', '.btn-hapus', function () {
+            indexHapus = $(this).data('index');
+            $('#popupHapus').addClass('active');
+        });
+
+        $('#btnBatalHapus').click(() => $('#popupHapus').removeClass('active'));
+
+        $('#btnYakinHapus').click(function () {
+            let data = JSON.parse(localStorage.getItem('dataMahasiswa')) || [];
+            data.splice(indexHapus, 1);
+            localStorage.setItem('dataMahasiswa', JSON.stringify(data));
+            $('#popupHapus').removeClass('overlay');
+            muatData();
+            tampilNotif('🗑️ Data berhasil dihapus!', '#f44336');
+        });
+
+        // ======== NAVBAR DROPDOWN =========
+        $('.dropdown > a').click(function (e) {
+            e.preventDefault();
+            $(this).next('.dropdown-content').toggle();
+        });
+
+        $(document).click(function (e) {
+            if (!$(e.target).closest('.dropdown').length) {
+                $('.dropdown-content').hide();
+            }
+        });
+    });
+</script>
+
+</body>
+
+</html>
