@@ -107,6 +107,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: auto;
             background: white;
             border-radius: 10px;
             overflow: hidden;
@@ -115,6 +116,8 @@
 
         th,
         td {
+            word-wrap: break-word;
+            white-space: normal;
             padding: 15px;
             text-align: center;
             border-bottom: 1px solid #ddd;
@@ -345,27 +348,27 @@
 
     <div class="notif" id="notif">✅ Aksi berhasil!</div>
 
-<script>
-    $(document).ready(function () {
-        let indexEdit = null;
-        let indexHapus = null;
+    <script>
+        $(document).ready(function () {
+            let indexEdit = null;
+            let indexHapus = null;
 
-        function tampilNotif(teks, warna = '#2196f3') {
-            $('#notif').text(teks).css('background', warna).fadeIn(300).delay(1500).fadeOut(400);
-        }
-
-        function muatData() {
-            let data = JSON.parse(localStorage.getItem('dataMahasiswa')) || [];
-            let tbody = $('#tabelMahasiswa tbody');
-            tbody.empty();
-
-            if (data.length === 0) {
-                tbody.append(`<tr><td colspan="6">Belum ada data mahasiswa.</td></tr>`);
-                return;
+            function tampilNotif(teks, warna = '#2196f3') {
+                $('#notif').text(teks).css('background', warna).fadeIn(300).delay(1500).fadeOut(400);
             }
 
-            data.forEach((mhs, i) => {
-                tbody.append(`
+            function muatData() {
+                let data = JSON.parse(localStorage.getItem('dataMahasiswa')) || [];
+                let tbody = $('#tabelMahasiswa tbody');
+                tbody.empty();
+
+                if (data.length === 0) {
+                    tbody.append(`<tr><td colspan="6">Belum ada data mahasiswa.</td></tr>`);
+                    return;
+                }
+
+                data.forEach((mhs, i) => {
+                    tbody.append(`
                     <tr>
                         <td>${i + 1}</td>
                         <td>${mhs.nama}</td>
@@ -378,116 +381,116 @@
                         </td>
                     </tr>
                 `);
+                });
+            }
+
+            muatData();
+
+            // ======== VALIDASI INPUTAN SAAT KETIK =========
+            $('#editNama, #editProdi').on('input', function () {
+                this.value = this.value.replace(/[^a-zA-Z\s]/g, ''); // hanya huruf dan spasi
             });
-        }
 
-        muatData();
+            $('#editNim').on('input', function () {
+                this.value = this.value.replace(/[^0-9]/g, ''); // hanya angka
+            });
 
-        // ======== VALIDASI INPUTAN SAAT KETIK =========
-        $('#editNama, #editProdi').on('input', function () {
-            this.value = this.value.replace(/[^a-zA-Z\s]/g, ''); // hanya huruf dan spasi
+            $('#editKelas').on('input', function () {
+                this.value = this.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 1); // 1 huruf kapital
+            });
+
+            // ======== EDIT DATA =========
+            $(document).on('click', '.btn-edit', function () {
+                indexEdit = $(this).data('index');
+                let data = JSON.parse(localStorage.getItem('dataMahasiswa')) || [];
+                let mhs = data[indexEdit];
+
+                $('#editNama').val(mhs.nama);
+                $('#editNim').val(mhs.nim);
+                $('#editProdi').val(mhs.prodi);
+                $('#editKelas').val(mhs.kelas);
+                $('#popupEdit').addClass('active');
+            });
+
+            $('#btnBatalEdit').click(() => $('#popupEdit').removeClass('active'));
+
+            $('#btnSimpanEdit').click(function () {
+                if (indexEdit === null || indexEdit === undefined) {
+                    alert('Tidak ada data yang dipilih untuk diedit.');
+                    return;
+                }
+
+                const nama = $('#editNama').val().trim();
+                const nim = $('#editNim').val().trim();
+                const prodi = $('#editProdi').val().trim();
+                const kelas = $('#editKelas').val().trim();
+
+                // ======== Validasi sebelum simpan =========
+                if (nama === "" || nim === "" || prodi === "" || kelas === "") {
+                    alert("⚠️ Harap isi semua data sebelum menyimpan!");
+                    return;
+                }
+
+                if (!/^[a-zA-Z\s]+$/.test(nama)) {
+                    alert("❌ Nama hanya boleh huruf dan spasi!");
+                    return;
+                }
+
+                if (!/^[0-9]+$/.test(nim)) {
+                    alert("❌ NIM hanya boleh berisi angka!");
+                    return;
+                }
+
+                if (!/^[a-zA-Z\s]+$/.test(prodi)) {
+                    alert("❌ Program Studi hanya boleh huruf dan spasi!");
+                    return;
+                }
+
+                if (!/^[A-Z]$/.test(kelas)) {
+                    alert("❌ Kelas hanya boleh 1 huruf kapital (misal: A, B, C)!");
+                    return;
+                }
+
+                let data = JSON.parse(localStorage.getItem('dataMahasiswa')) || [];
+                data[indexEdit] = { nama, nim, prodi, kelas };
+                localStorage.setItem('dataMahasiswa', JSON.stringify(data));
+
+                $('#popupEdit').removeClass('active');
+                muatData();
+                tampilNotif('✅ Data berhasil diperbarui!', '#4caf50');
+                indexEdit = null;
+            });
+
+            // ======== HAPUS DATA =========
+            $(document).on('click', '.btn-hapus', function () {
+                indexHapus = $(this).data('index');
+                $('#popupHapus').addClass('active');
+            });
+
+            $('#btnBatalHapus').click(() => $('#popupHapus').removeClass('active'));
+
+            $('#btnYakinHapus').click(function () {
+                let data = JSON.parse(localStorage.getItem('dataMahasiswa')) || [];
+                data.splice(indexHapus, 1);
+                localStorage.setItem('dataMahasiswa', JSON.stringify(data));
+                $('#popupHapus').removeClass('overlay');
+                muatData();
+                tampilNotif('🗑️ Data berhasil dihapus!', '#f44336');
+            });
+
+            // ======== NAVBAR DROPDOWN =========
+            $('.dropdown > a').click(function (e) {
+                e.preventDefault();
+                $(this).next('.dropdown-content').toggle();
+            });
+
+            $(document).click(function (e) {
+                if (!$(e.target).closest('.dropdown').length) {
+                    $('.dropdown-content').hide();
+                }
+            });
         });
-
-        $('#editNim').on('input', function () {
-            this.value = this.value.replace(/[^0-9]/g, ''); // hanya angka
-        });
-
-        $('#editKelas').on('input', function () {
-            this.value = this.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 1); // 1 huruf kapital
-        });
-
-        // ======== EDIT DATA =========
-        $(document).on('click', '.btn-edit', function () {
-            indexEdit = $(this).data('index');
-            let data = JSON.parse(localStorage.getItem('dataMahasiswa')) || [];
-            let mhs = data[indexEdit];
-
-            $('#editNama').val(mhs.nama);
-            $('#editNim').val(mhs.nim);
-            $('#editProdi').val(mhs.prodi);
-            $('#editKelas').val(mhs.kelas);
-            $('#popupEdit').addClass('active');
-        });
-
-        $('#btnBatalEdit').click(() => $('#popupEdit').removeClass('active'));
-
-        $('#btnSimpanEdit').click(function () {
-            if (indexEdit === null || indexEdit === undefined) {
-                alert('Tidak ada data yang dipilih untuk diedit.');
-                return;
-            }
-
-            const nama = $('#editNama').val().trim();
-            const nim = $('#editNim').val().trim();
-            const prodi = $('#editProdi').val().trim();
-            const kelas = $('#editKelas').val().trim();
-
-            // ======== Validasi sebelum simpan =========
-            if (nama === "" || nim === "" || prodi === "" || kelas === "") {
-                alert("⚠️ Harap isi semua data sebelum menyimpan!");
-                return;
-            }
-
-            if (!/^[a-zA-Z\s]+$/.test(nama)) {
-                alert("❌ Nama hanya boleh huruf dan spasi!");
-                return;
-            }
-
-            if (!/^[0-9]+$/.test(nim)) {
-                alert("❌ NIM hanya boleh berisi angka!");
-                return;
-            }
-
-            if (!/^[a-zA-Z\s]+$/.test(prodi)) {
-                alert("❌ Program Studi hanya boleh huruf dan spasi!");
-                return;
-            }
-
-            if (!/^[A-Z]$/.test(kelas)) {
-                alert("❌ Kelas hanya boleh 1 huruf kapital (misal: A, B, C)!");
-                return;
-            }
-
-            let data = JSON.parse(localStorage.getItem('dataMahasiswa')) || [];
-            data[indexEdit] = { nama, nim, prodi, kelas };
-            localStorage.setItem('dataMahasiswa', JSON.stringify(data));
-
-            $('#popupEdit').removeClass('active');
-            muatData();
-            tampilNotif('✅ Data berhasil diperbarui!', '#4caf50');
-            indexEdit = null;
-        });
-
-        // ======== HAPUS DATA =========
-        $(document).on('click', '.btn-hapus', function () {
-            indexHapus = $(this).data('index');
-            $('#popupHapus').addClass('active');
-        });
-
-        $('#btnBatalHapus').click(() => $('#popupHapus').removeClass('active'));
-
-        $('#btnYakinHapus').click(function () {
-            let data = JSON.parse(localStorage.getItem('dataMahasiswa')) || [];
-            data.splice(indexHapus, 1);
-            localStorage.setItem('dataMahasiswa', JSON.stringify(data));
-            $('#popupHapus').removeClass('overlay');
-            muatData();
-            tampilNotif('🗑️ Data berhasil dihapus!', '#f44336');
-        });
-
-        // ======== NAVBAR DROPDOWN =========
-        $('.dropdown > a').click(function (e) {
-            e.preventDefault();
-            $(this).next('.dropdown-content').toggle();
-        });
-
-        $(document).click(function (e) {
-            if (!$(e.target).closest('.dropdown').length) {
-                $('.dropdown-content').hide();
-            }
-        });
-    });
-</script>
+    </script>
 
 </body>
 
